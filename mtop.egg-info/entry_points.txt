@@ -1,0 +1,2 @@
+[console_scripts]
+mtop = shm.ui.app:main
