@@ -1,117 +1,238 @@
-import time
-from typing import Dict, List
 
-import asciichartpy as asciichart
+# # from collections import deque
+# # from .common import GraphBox, DataBox
 
-from shm.core.network import NetworkProvider
-from shm.metrics.net_calc import NetworkCalcProvider
+
+# # def format_speed(bytes_per_sec: float) -> str:
+# #     bits = bytes_per_sec * 8
+# #     for unit in ("bps", "Kbps", "Mbps", "Gbps"):
+# #         if bits < 1000:
+# #             return f"{bits:.2f} {unit}"
+# #         bits /= 1000
+# #     return f"{bits:.2f} Tbps"
+
+
+# # def format_bytes(v: float) -> str:
+# #     for u in ("B", "KiB", "MiB", "GiB", "TiB"):
+# #         if v < 1024:
+# #             return f"{v:.2f} {u}"
+# #         v /= 1024
+# #     return f"{v:.2f} PiB"
+
+
+# # class NetworkWidget:
+# #     """
+# #     Production Network Widget
+# #     - Interface name shown ONCE
+# #     - Human readable values
+# #     - RX + TX combined graph
+# #     """
+
+# #     def __init__(self):
+# #         self.graph = GraphBox()
+# #         self.data = DataBox()
+
+# #         self.rx_hist = deque(maxlen=60)
+# #         self.tx_hist = deque(maxlen=60)
+
+# #     def update(self, net: dict):
+# #         lines = []
+
+# #         for iface, stats in net.items():
+# #             down = stats.get("download_speed", 0.0)
+# #             up = stats.get("upload_speed", 0.0)
+
+# #             # graph history
+# #             self.rx_hist.append(down)
+# #             self.tx_hist.append(up)
+
+# #             # ---- interface header (ONCE) ----
+# #             lines.append(f"[b]{iface.upper()}[/b]")
+
+# #             lines.append(f"  Download Speed      {format_speed(down)}")
+# #             lines.append(f"  Upload Speed        {format_speed(up)}")
+# #             lines.append(
+# #                 f"  Total Receive       {format_bytes(stats.get('total_receive_bytes', 0))}"
+# #             )
+# #             lines.append(
+# #                 f"  Total Transmit      {format_bytes(stats.get('total_transmit_bytes', 0))}"
+# #             )
+# #             lines.append(f"  Receive Packets     {stats.get('receive_packets', 0)}")
+# #             lines.append(f"  Transmit Packets    {stats.get('transmit_packets', 0)}")
+# #             lines.append(f"  Receive Errors      {stats.get('receive_errors', 0)}")
+# #             lines.append(f"  Transmit Errors     {stats.get('transmit_errors', 0)}")
+# #             lines.append(
+# #                 f"  Dropped Packets     {stats.get('total_dropped_packets', 0)}"
+# #             )
+# #             lines.append("")
+
+# #         # RX + TX combined graph
+# #         mix = deque(
+# #             [r + t for r, t in zip(self.rx_hist, self.tx_hist)],
+# #             maxlen=60,
+# #         )
+
+# #         self.graph.update_graph("Network RX + TX", mix)
+# #         self.data.update_data("NETWORK", lines)
+
+
+
+
+# from collections import deque
+# from shm.ui.widgets.common import GraphBox, DataBox
+
+
+# def format_speed(bytes_per_sec: float) -> str:
+#     bits = bytes_per_sec * 8
+#     for unit in ("bps", "Kbps", "Mbps", "Gbps"):
+#         if bits < 1000:
+#             return f"{bits:.2f} {unit}"
+#         bits /= 1000
+#     return f"{bits:.2f} Tbps"
+
+
+# def format_bytes(v: float) -> str:
+#     for u in ("B", "KiB", "MiB", "GiB", "TiB"):
+#         if v < 1024:
+#             return f"{v:.2f} {u}"
+#         v /= 1024
+#     return f"{v:.2f} PiB"
+
+
+# class NetworkWidget:
+#     def __init__(self):
+#         # dashboard widgets
+#         self.graph = GraphBox()
+#         self.data = DataBox()
+
+#         # fullscreen widgets (SEPARATE)
+#         self.full_graph = GraphBox()
+#         self.full_data = DataBox()
+
+#         self.rx_hist = deque(maxlen=60)
+#         self.tx_hist = deque(maxlen=60)
+
+#     def update(self, net: dict):
+#         lines = []
+
+#         for iface, stats in net.items():
+#             down = stats.get("download_speed", 0.0)
+#             up = stats.get("upload_speed", 0.0)
+
+#             self.rx_hist.append(down)
+#             self.tx_hist.append(up)
+
+#             lines.append(f"[b]{iface.upper()}[/b]")
+#             lines.append(f"  Download Speed      {format_speed(down)}")
+#             lines.append(f"  Upload Speed        {format_speed(up)}")
+#             lines.append(
+#                 f"  Total Receive       {format_bytes(stats.get('total_receive_bytes', 0))}"
+#             )
+#             lines.append(
+#                 f"  Total Transmit      {format_bytes(stats.get('total_transmit_bytes', 0))}"
+#             )
+#             lines.append(f"  Receive Packets     {stats.get('receive_packets', 0)}")
+#             lines.append(f"  Transmit Packets    {stats.get('transmit_packets', 0)}")
+#             lines.append(f"  Receive Errors      {stats.get('receive_errors', 0)}")
+#             lines.append(f"  Transmit Errors     {stats.get('transmit_errors', 0)}")
+#             lines.append(
+#                 f"  Dropped Packets     {stats.get('total_dropped_packets', 0)}"
+#             )
+#             lines.append("")
+
+#         mix = deque(
+#             [r + t for r, t in zip(self.rx_hist, self.tx_hist)],
+#             maxlen=60,
+#         )
+
+#         # dashboard
+#         self.graph.update_graph("Network RX + TX", mix, height=8)
+#         self.data.update_data("NETWORK", lines)
+
+#         # fullscreen
+#         self.full_graph.update_graph("Network RX + TX", mix, height=22)
+#         self.full_data.update_data("NETWORK", lines)
+from collections import deque
+from .common import GraphBox, DataBox
+
+
+def format_speed(bytes_per_sec: float) -> str:
+    bits = bytes_per_sec * 8
+    for unit in ("bps", "Kbps", "Mbps", "Gbps"):
+        if bits < 1000:
+            return f"{bits:.2f} {unit}"
+        bits /= 1000
+    return f"{bits:.2f} Tbps"
+
+
+def format_bytes(v: float) -> str:
+    for u in ("B", "KiB", "MiB", "GiB", "TiB"):
+        if v < 1024:
+            return f"{v:.2f} {u}"
+        v /= 1024
+    return f"{v:.2f} PiB"
 
 
 class NetworkWidget:
     """
-    Fully dynamic, production-grade Network Widget.
-
-    - Shows ALL interfaces (including lo)
-    - Shows ALL raw + calculated fields
-    - Fixed-scale graphs (no jump)
-    - Future-proof (new fields auto-render)
+    Network Widget
+    - Dashboard graph (small)
+    - Fullscreen graph (big)
+    - Interface name shown once
     """
 
-    def __init__(self) -> None:
-        self.calc = NetworkCalcProvider()
-        self.raw = NetworkProvider()
+    def __init__(self):
+        # dashboard
+        self.graph = GraphBox()
+        self.data = DataBox()
 
-        self.history: Dict[str, Dict[str, List[float]]] = {}
-        self.scale: Dict[str, Dict[str, float]] = {}
-        self.max_history: int = 30
+        # fullscreen
+        self.full_graph = GraphBox()
+        self.full_data = DataBox()
 
-    # ---------------- GRAPH ----------------
-    def _plot(self, data: List[float], max_scale: float, color):
-        if not data:
-            return ""
+        self.rx_hist = deque(maxlen=60)
+        self.tx_hist = deque(maxlen=60)
 
-        return asciichart.plot(
-            data[-self.max_history:],
-            {
-                "height": 4,
-                "min": 0,
-                "max": max_scale,
-                "colors": [color],
-            },
+    def update(self, net: dict, full: bool = False):
+        lines = []
+
+        for iface, stats in net.items():
+            down = stats.get("download_speed", 0.0)
+            up = stats.get("upload_speed", 0.0)
+
+            self.rx_hist.append(down)
+            self.tx_hist.append(up)
+
+            lines.append(f"[b]{iface.upper()}[/b]")
+            lines.append(f"  Download Speed      {format_speed(down)}")
+            lines.append(f"  Upload Speed        {format_speed(up)}")
+            lines.append(
+                f"  Total Receive       {format_bytes(stats.get('total_receive', 0))}"
+            )
+            lines.append(
+                f"  Total Transmit      {format_bytes(stats.get('total_transmit', 0))}"
+            )
+            lines.append(f"  Receive Packets     {stats.get('receive_packets', 0)}")
+            lines.append(f"  Transmit Packets    {stats.get('transmit_packets', 0)}")
+            lines.append(f"  Receive Errors      {stats.get('receive_errors', 0)}")
+            lines.append(f"  Transmit Errors     {stats.get('transmit_errors', 0)}")
+            lines.append(
+                f"  Dropped Packets     {stats.get('total_dropped_packets', 0)}"
+            )
+            lines.append("")
+
+        mix = deque(
+            [r + t for r, t in zip(self.rx_hist, self.tx_hist)],
+            maxlen=60,
         )
 
-    # ---------------- RENDER ----------------
-    def render(self) -> List[str]:
-        output: List[str] = []
+        # -------- dashboard --------
+        self.graph.update_graph("Network RX + TX", mix, height=8)
+        self.data.update_data("NETWORK", lines)
 
-        calc_data = self.calc.get_metrics()
-        raw_data = self.raw._read_network_file()
-
-        output.append("NETWORK INTERFACE STATISTICS")
-        output.append("─" * 60)
-
-        # iterate over ALL interfaces from raw provider
-        for iface, raw in raw_data.items():
-
-            # init state
-            if iface not in self.history:
-                self.history[iface] = {"down": [], "up": []}
-                self.scale[iface] = {"down": 1.0, "up": 1.0}
-
-            stats = calc_data.get(iface, {})
-
-            down = stats.get("down_speed", 0.0)
-            up = stats.get("up_speed", 0.0)
-
-            # history update
-            self.history[iface]["down"].append(down)
-            self.history[iface]["up"].append(up)
-
-            if len(self.history[iface]["down"]) > self.max_history:
-                self.history[iface]["down"].pop(0)
-                self.history[iface]["up"].pop(0)
-
-            # fixed scale
-            self.scale[iface]["down"] = max(self.scale[iface]["down"], max(self.history[iface]["down"]))
-            self.scale[iface]["up"] = max(self.scale[iface]["up"], max(self.history[iface]["up"]))
-
-            # header
-            output.append(f"{iface.upper()}")
-
-            # speeds
-            output.append(f"▼ Down: {NetworkProvider.format_speed(down)}")
-            output.append(self._plot(self.history[iface]["down"], self.scale[iface]["down"], asciichart.blue))
-
-            output.append(f"▲ Up:   {NetworkProvider.format_speed(up)}")
-            output.append(self._plot(self.history[iface]["up"], self.scale[iface]["up"], asciichart.red))
-
-            # ---------------- DETAILS (DYNAMIC) ----------------
-            output.append("Details:")
-
-            # calculated stats
-            for k, v in stats.items():
-                if k.endswith("_speed"):
-                    continue
-                output.append(f"  {k:<12} = {v}")
-
-            # raw stats (always)
-            for k, v in raw.items():
-                output.append(f"  {k:<12} = {v}")
-
-            output.append("")
-
-        return output
-
-
-# ---------------- STANDALONE RUN ----------------
-if __name__ == "__main__":
-    ui = NetworkWidget()
-
-    try:
-        while True:
-            print("\033[H\033[J", end="")
-            for line in ui.render():
-                print(line)
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("\nExit")
+        # -------- fullscreen --------
+        if full:
+            self.full_graph.update_graph(
+                "Network RX + TX", mix, height=24
+            )
+            self.full_data.update_data("NETWORK", lines)

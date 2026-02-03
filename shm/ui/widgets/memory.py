@@ -1,119 +1,77 @@
-from typing import Dict, List
+from collections import deque
+from .common import GraphBox, DataBox  
 
-from shm.core.memory import MemoryProvider
+
+def format_bytes(v: float) -> str:
+    for u in ("B", "KiB", "MiB", "GiB", "TiB"):
+        if v < 1024:
+            return f"{v:.2f} {u}"
+        v /= 1024
+    return f"{v:.2f} PiB"
 
 
 class MemoryWidget:
     """
-    Dynamically renders ALL memory-related data provided
-    by MemoryProvider (RAM + SWAP), without hardcoding keys.
+    Memory Widget
+    - Dashboard graph
+    - Fullscreen graph
     """
 
-    def __init__(self) -> None:
-        self.ram_history: List[float] = []
-        self.swap_history: List[float] = []
-        self.max_history: int = 40
+    def __init__(self):
+        # -------- Dashboard widgets --------
+        self.graph = GraphBox()
+        self.data = DataBox()
 
-        self.colors = {
-            "ram": "\033[38;5;40m",     # Green
-            "swap": "\033[38;5;208m",   # Orange
-            "reset": "\033[0m",
-            "bold": "\033[1m",
-        }
+        # -------- Fullscreen widgets --------
+        self.full_graph = GraphBox()
+        self.full_data = DataBox()
 
-    # ---------------- BAR ----------------
-    def _get_bar(
-        self,
-        percentage: float,
-        color: str,
-        width: int = 20
-    ) -> str:
-        filled = int(width * percentage / 100)
-        return (
-            f"{color}{'█' * filled}"
-            f"{self.colors['reset']}"
-            f"{'░' * (width - filled)}"
+        self.history = deque(maxlen=60)
+
+    # -------------------------------------------------
+    def update(self, mem: dict, full: bool = False):
+        """
+        full=False → dashboard
+        full=True  → fullscreen
+        """
+
+        total = mem.get("total", 1) or 1
+        used = mem.get("used", 0)
+
+        used_pct = (used / total) * 100
+        self.history.append(used_pct)
+
+        # -------- render table --------
+        render = {}
+        for k, v in mem.items():
+            if isinstance(v, (int, float)):
+                if k == "total":
+                    render[k] = format_bytes(v)
+                else:
+                    pct = (v / total) * 100
+                    render[k] = f"{format_bytes(v)} ({pct:.1f}%)"
+            else:
+                render[k] = str(v)
+
+        # -------- Dashboard --------
+        self.graph.update_graph(
+            "Memory %",
+            self.history,
+            height=8,
+        )
+        self.data.update_data(
+            "MEMORY",
+            render,
         )
 
-    # ---------------- GRAPH ----------------
-    def _get_line_graph(
-        self,
-        history: List[float],
-        current_val: float,
-        color: str
-    ) -> str:
-        history.append(current_val)
-        if len(history) > self.max_history:
-            history.pop(0)
-
-        blocks = [" ", " ", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
-        graph = "".join(
-            blocks[int((v / 100) * (len(blocks) - 1))]
-            for v in history
-        )
-        return f"{color}{graph}{self.colors['reset']}"
-
-    # ---------------- RENDER ----------------
-    def render(self, mem_data: Dict[str, int]) -> List[str]:
-        output: List[str] = []
-        fmt = MemoryProvider.format_bytes
-
-        # ================= RAM SUMMARY =================
-        total = mem_data.get("total", 0)
-        used = mem_data.get("used", 0)
-        available = mem_data.get("available", 0)
-
-        ram_pct = (used / total * 100) if total > 0 else 0
-
-        output.append(
-            f"{self.colors['bold']}MEMORY (RAM){self.colors['reset']}  "
-            f"{self._get_bar(ram_pct, self.colors['ram'])} "
-            f"{ram_pct:>5.1f}%"
-        )
-
-        ram_graph = self._get_line_graph(
-            self.ram_history,
-            ram_pct,
-            self.colors["ram"]
-        )
-        output.append(f"History: [{ram_graph:<{self.max_history}}]")
-
-        # ================= RAM DETAILS (DYNAMIC) =================
-        for key, value in mem_data.items():
-            if key.startswith("swap_"):
-                continue  # handled later
-
-            output.append(
-                f"{key:<12} = {fmt(value)}"
+        # -------- Fullscreen --------
+        if full:
+            self.full_graph.update_graph(
+                "Memory %",
+                self.history,
+                height=22,
             )
-
-        output.append("")
-
-        # ================= SWAP =================
-        swap_total = mem_data.get("swap_total", 0)
-        swap_used = mem_data.get("swap_used", 0)
-
-        if swap_total > 0:
-            swap_pct = (swap_used / swap_total * 100)
-
-            output.append(
-                f"{self.colors['bold']}SWAP{self.colors['reset']}        "
-                f"{self._get_bar(swap_pct, self.colors['swap'])} "
-                f"{swap_pct:>5.1f}%"
+            self.full_data.update_data(
+                "MEMORY",
+                render,
             )
-
-            swap_graph = self._get_line_graph(
-                self.swap_history,
-                swap_pct,
-                self.colors["swap"]
-            )
-            output.append(f"History: [{swap_graph:<{self.max_history}}]")
-
-            # ================= SWAP DETAILS (DYNAMIC) =================
-            for key, value in mem_data.items():
-                if key.startswith("swap_"):
-                    output.append(
-                        f"{key:<12} = {fmt(value)}"
-                    )
-
-        return output
